@@ -1,9 +1,10 @@
-import _, { isNumber, reduce, sum } from 'lodash';
+import _, { isNumber, reduce, sum, uniq } from 'lodash';
 import * as util from '../../../util/util';
 import * as test from '../../../util/test';
 import chalk from 'chalk';
 import { log, logSolution, trace } from '../../../util/log';
 import { performance } from 'perf_hooks';
+import { Cell, Grid } from '../../../util/grid';
 
 const YEAR = 2023;
 const DAY = 3;
@@ -12,6 +13,7 @@ const DAY = 3;
 // data path    : /home/rothanak/Projects/advent-of-code-2023/years/2023/03/data.txt
 // problem url  : https://adventofcode.com/2023/day/3
 
+// -- PART 1 -- //
 function filterAdjacentNumbers(input: string): number[] {
 	const rows = input.split('\n');
 	const filteredNumbers: number[] = [];
@@ -52,7 +54,6 @@ function checkAdjacency(rows: string[], rowIndex: number, colIndex: number, numD
 				!(typeof +current !== 'number') &&
 				current !== undefined
 			) {
-				console.log('🚀 ~ file: index.ts:49 ~ checkAdjacency ~ current:', current);
 				return true;
 			}
 		}
@@ -75,15 +76,62 @@ function getNumberOfDigits(row: string, colIndex: number): number {
 
 async function p2023day3_part1(input: string, ...params: any[]) {
 	const filteredOutput = filterAdjacentNumbers(input);
-	console.log(
-		'🚀 ~ file: index.ts:75 ~ p2023day3_part1 ~ filteredOutput:',
-		filteredOutput[filteredOutput.length - 1]
-	);
 	return sum(filteredOutput);
 }
 
+// -- PART 2 -- //
+const formNumber = (c: Cell) => {
+	const toLeft1 = c.west()?.value;
+	const toLeft2 = c.west(2)?.value;
+	const toRight1 = c.east()?.value;
+	const toRight2 = c.east(2)?.value;
+
+	let actualNumber = c.value;
+	if (toLeft1 && toLeft1 >= '0' && toLeft1 <= '9') {
+		actualNumber = `${toLeft1}${actualNumber}`;
+		if (toLeft2 && toLeft2 >= '0' && toLeft2 <= '9') {
+			actualNumber = `${toLeft2}${actualNumber}`;
+		}
+	}
+	if (toRight1 && toRight1 >= '0' && toRight1 <= '9') {
+		actualNumber = `${actualNumber}${toRight1}`;
+		if (toRight2 && toRight2 >= '0' && toRight2 <= '9') {
+			actualNumber = `${actualNumber}${toRight2}`;
+		}
+	}
+	return Number(actualNumber);
+};
+
+function isStarWithAdjacentNumbers(input: string) {
+	const grid = new Grid({
+		serialized: input,
+	});
+	const neighbours: number[][] = [];
+
+	const starPositions = grid.getCells(cell => cell.value === '*');
+	for (const star of starPositions) {
+		const neighbouringNumbers: number[] = [];
+
+		star.neighbors(true).filter((c: Cell) => {
+			if (c.value >= '0' && c.value <= '9') {
+				neighbouringNumbers.push(formNumber(c));
+			}
+		});
+
+		neighbours.push(uniq(neighbouringNumbers));
+	}
+
+	return neighbours.filter(arr => arr.length === 2);
+}
+
 async function p2023day3_part2(input: string, ...params: any[]) {
-	return 'Not implemented';
+	let sum = 0;
+	const adjacencyMatrix = isStarWithAdjacentNumbers(input);
+	adjacencyMatrix.forEach(tuple => {
+		sum += Number(tuple[0]) * Number(tuple[1]);
+	});
+
+	return sum;
 }
 
 async function run() {

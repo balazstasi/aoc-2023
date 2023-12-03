@@ -1,6 +1,6 @@
-import * as util from "./util";
-import _ from "lodash";
-import chalk from "chalk";
+import * as util from './util';
+import _ from 'lodash';
+import chalk from 'chalk';
 
 /**
  * Options for initializing a Grid
@@ -150,7 +150,7 @@ export type GridPos = [row: number, col: number];
  * - Function: If a cell is returned, use that cell as the next
  *             position. Otherwise acts like "none".
  */
-export type MoveOption = "wrap" | "stay" | "expand" | "none" | ((cell: Cell | undefined, origin: Cell) => GridPos);
+export type MoveOption = 'wrap' | 'stay' | 'expand' | 'none' | ((cell: Cell | undefined, origin: Cell) => GridPos);
 
 /**
  * Options for moving from cell-to-cell
@@ -184,7 +184,7 @@ export interface RepeatMovementsOptions {
 	transferData?: boolean;
 }
 
-const DEFAULT_FILL = " ";
+const DEFAULT_FILL = ' ';
 
 const COLOR_ORDER = [
 	chalk.yellowBright,
@@ -233,9 +233,9 @@ export class Grid {
 
 	constructor(options: GridOptions) {
 		if ((!options.rowCount || !options.colCount) && !options.serialized) {
-			throw new Error("Must specify # of rows and cols, or a serialized grid.");
+			throw new Error('Must specify # of rows and cols, or a serialized grid.');
 		}
-		const splitSerial = options.serialized?.split("\n");
+		const splitSerial = options.serialized?.split('\n');
 		this.numRows = options.rowCount || splitSerial!.length;
 		this.numCols = options.colCount || splitSerial![0].length;
 		this.fillWith = options.fillWith ?? DEFAULT_FILL;
@@ -285,7 +285,7 @@ export class Grid {
 	 * @param updateDimensions
 	 */
 	public setFromSerialized(serialized: string, updateDimensions: boolean = true) {
-		const serialRows = serialized.split("\n");
+		const serialRows = serialized.split('\n');
 
 		if (updateDimensions) {
 			this.numRows = serialRows.length;
@@ -302,7 +302,7 @@ export class Grid {
 	}
 
 	private getSigilColor(sigil: string) {
-		if (sigil === ".") {
+		if (sigil === '.') {
 			return chalk.gray;
 		} else {
 			return COLOR_ORDER[this.sigilStats[sigil].colorIndex];
@@ -312,7 +312,7 @@ export class Grid {
 	private ensureSigilRegistered(sigil: string) {
 		if (!this.sigilStats[sigil]) {
 			this.sigilStats[sigil] = { count: 0, colorIndex: this.nextColor++ % COLOR_ORDER.length };
-			if (sigil === " ") {
+			if (sigil === ' ') {
 				// don't advance color for spaces
 				this.nextColor--;
 			}
@@ -327,7 +327,7 @@ export class Grid {
 	 */
 	public batchUpdates() {
 		if (this.batchUpdatedGrid != undefined) {
-			throw new Error("Already batch updating. Must commit those changes first.");
+			throw new Error('Already batch updating. Must commit those changes first.');
 		}
 		this.batchUpdatedGrid = new Grid({ serialized: this.toString() });
 	}
@@ -338,7 +338,7 @@ export class Grid {
 	 */
 	public commit() {
 		if (this.batchUpdatedGrid == undefined) {
-			throw new Error("Have not called batchUpdates().");
+			throw new Error('Have not called batchUpdates().');
 		}
 		for (const cell of this.batchUpdatedGrid) {
 			this.setCell(cell.position, cell.value, true);
@@ -353,7 +353,7 @@ export class Grid {
 	 */
 	public peekBatchedUpdates() {
 		if (this.batchUpdatedGrid == undefined) {
-			throw new Error("Have not called batchUpdates().");
+			throw new Error('Have not called batchUpdates().');
 		}
 		return this.batchUpdatedGrid;
 	}
@@ -393,13 +393,13 @@ export class Grid {
 	 */
 	public getCell(input: GridPos | string | ((cell: Cell) => boolean), track: boolean | null = false) {
 		let result: Cell | undefined = undefined;
-		if (typeof input === "string") {
+		if (typeof input === 'string') {
 			for (const cell of this) {
 				if (cell.value === input) {
 					result = cell;
 				}
 			}
-		} else if (typeof input === "function") {
+		} else if (typeof input === 'function') {
 			for (const cell of this) {
 				if (input(cell)) {
 					result = cell;
@@ -411,7 +411,7 @@ export class Grid {
 			}
 		}
 		if (result) {
-			const resultCellKey = result.position.join(",");
+			const resultCellKey = result.position.join(',');
 			if (this.trackedCells.has(resultCellKey) && track !== false) {
 				return this.trackedCells.get(resultCellKey);
 			} else {
@@ -430,14 +430,14 @@ export class Grid {
 	 * @param cell
 	 */
 	public trackCell(cell: Cell) {
-		this.trackedCells.set(cell.position.join(","), cell);
+		this.trackedCells.set(cell.position.join(','), cell);
 	}
 
 	/**
 	 * Stop the grid from tracking the given cell.
 	 */
 	public untrackCell(cell: Cell) {
-		return this.trackedCells.delete(cell.position.join(","));
+		return this.trackedCells.delete(cell.position.join(','));
 	}
 
 	/**
@@ -445,7 +445,7 @@ export class Grid {
 	 * @param cell
 	 */
 	public isTracked(cell: Cell) {
-		return this.trackedCells.has(cell.position.join(","));
+		return this.trackedCells.has(cell.position.join(','));
 	}
 
 	/**
@@ -457,14 +457,14 @@ export class Grid {
 	 */
 	public getCells(input: GridPos[] | string | ((cell: Cell) => boolean)) {
 		const result: Cell[] = [];
-		if (typeof input === "string") {
+		if (typeof input === 'string') {
 			for (const cell of this) {
 				if (cell.value === input) {
 					result.push(cell);
 				}
 			}
 			return result;
-		} else if (typeof input === "function") {
+		} else if (typeof input === 'function') {
 			for (const cell of this) {
 				if (input(cell)) {
 					result.push(cell);
@@ -526,15 +526,15 @@ export class Grid {
 	private reconcileTrackedCells() {
 		const newTrackedCells = new Map<string, Cell>();
 		for (const cell of this.trackedCells.values()) {
-			newTrackedCells.set(cell.position.join(","), cell);
+			newTrackedCells.set(cell.position.join(','), cell);
 		}
 		this.trackedCells = newTrackedCells;
 	}
 
-	private editTop(options: Pick<EditGridOptions, "top" | "fillWith">) {
+	private editTop(options: Pick<EditGridOptions, 'top' | 'fillWith'>) {
 		const { top = 0, fillWith = this.fillWith } = options;
 		if (top + this.numRows < 0) {
-			throw new Error("Cannot remove more rows than exist in the grid.");
+			throw new Error('Cannot remove more rows than exist in the grid.');
 		}
 		this.numRows += top;
 		this.ensureSigilRegistered(fillWith);
@@ -553,10 +553,10 @@ export class Grid {
 		}
 	}
 
-	private editBottom(options: Pick<EditGridOptions, "bottom" | "fillWith">) {
+	private editBottom(options: Pick<EditGridOptions, 'bottom' | 'fillWith'>) {
 		const { bottom = 0, fillWith = this.fillWith } = options;
 		if (bottom + this.numRows < 0) {
-			throw new Error("Cannot remove more rows than exist in the grid.");
+			throw new Error('Cannot remove more rows than exist in the grid.');
 		}
 		this.numRows += bottom;
 		this.ensureSigilRegistered(fillWith);
@@ -570,10 +570,10 @@ export class Grid {
 		}
 	}
 
-	private editLeft(options: Pick<EditGridOptions, "left" | "fillWith">) {
+	private editLeft(options: Pick<EditGridOptions, 'left' | 'fillWith'>) {
 		const { left = 0, fillWith = this.fillWith } = options;
 		if (left + this.numCols < 0) {
-			throw new Error("Cannot remove more columns than exist in the grid.");
+			throw new Error('Cannot remove more columns than exist in the grid.');
 		}
 		this.numCols += left;
 		this.ensureSigilRegistered(fillWith);
@@ -594,10 +594,10 @@ export class Grid {
 		}
 	}
 
-	private editRight(options: Pick<EditGridOptions, "right" | "fillWith">) {
+	private editRight(options: Pick<EditGridOptions, 'right' | 'fillWith'>) {
 		const { right = 0, fillWith = this.fillWith } = options;
 		if (right + this.numCols < 0) {
-			throw new Error("Cannot remove more columns than exist in the grid.");
+			throw new Error('Cannot remove more columns than exist in the grid.');
 		}
 		this.numCols += right;
 		this.ensureSigilRegistered(fillWith);
@@ -613,8 +613,8 @@ export class Grid {
 		}
 	}
 
-	public rotate(count = 1, direction: "CW" | "CCW" = "CW") {
-		const rotateCount = (direction === "CCW" ? count * 3 : count) % 4;
+	public rotate(count = 1, direction: 'CW' | 'CCW' = 'CW') {
+		const rotateCount = (direction === 'CCW' ? count * 3 : count) % 4;
 		if (rotateCount === 0) {
 			return this.copyGrid();
 		}
@@ -637,13 +637,13 @@ export class Grid {
 		return newGrid;
 	}
 
-	public flip(direction: "horizontal" | "vertical" | "both") {
+	public flip(direction: 'horizontal' | 'vertical' | 'both') {
 		const newGrid = new Grid({
 			rowCount: this.rowCount,
 			colCount: this.colCount,
 		});
-		const flipH = direction === "horizontal" || direction === "both";
-		const flipV = direction === "vertical" || direction === "both";
+		const flipH = direction === 'horizontal' || direction === 'both';
+		const flipV = direction === 'vertical' || direction === 'both';
 		for (let i = 0; i < this.rowCount; ++i) {
 			for (let j = 0; j < this.colCount; ++j) {
 				newGrid.setCell(
@@ -667,7 +667,7 @@ export class Grid {
 		getNewCellValue: (cell: Cell, grid: Grid) => string | undefined
 	) {
 		let changes = true;
-		for (let i = 0; typeof iterations === "number" ? i < iterations : iterations(this, changes); ++i) {
+		for (let i = 0; typeof iterations === 'number' ? i < iterations : iterations(this, changes); ++i) {
 			this.batchUpdates();
 			changes = false;
 			for (const cell of this) {
@@ -694,13 +694,13 @@ export class Grid {
 	 * newline characters.
 	 */
 	public toString() {
-		let str = "";
+		let str = '';
 		for (let i = 0; i < this.grid.length; ++i) {
 			for (let j = 0; j < this.grid[0].length; ++j) {
 				str += this.grid[i][j];
 			}
 			if (i < this.grid.length - 1) {
-				str += "\n";
+				str += '\n';
 			}
 		}
 		return str;
@@ -717,7 +717,7 @@ export class Grid {
 		}
 		for (let i = 0; i < this.grid.length; ++i) {
 			for (let j = 0; j < this.grid[0].length; ++j) {
-				if (typeof cellToString === "function") {
+				if (typeof cellToString === 'function') {
 					const cell = this.getCell([i, j], null);
 					if (cell) {
 						const char = this.grid[i][j];
@@ -729,7 +729,7 @@ export class Grid {
 					process.stdout.write(this.getSigilColor(char)(char));
 				}
 			}
-			process.stdout.write("\n");
+			process.stdout.write('\n');
 		}
 		console.log();
 	}
@@ -747,7 +747,7 @@ export class Grid {
 		return {
 			next: (): IteratorResult<Cell, undefined> => {
 				if (this.numRows !== savedRows || this.numCols !== savedCols) {
-					throw new Error("Grid has changed shape since the last iteration.");
+					throw new Error('Grid has changed shape since the last iteration.');
 				}
 				if (row >= this.numRows) {
 					return { done: true, value: undefined };
@@ -818,8 +818,8 @@ export class Cell {
 	 */
 	public north(
 		count: number | ((cell: Cell | undefined, origin: Cell) => boolean) = 1,
-		moveOption: MoveOption = "none",
-		options: Omit<RepeatMovementsOptions, "count" | "moveOption"> = {}
+		moveOption: MoveOption = 'none',
+		options: Omit<RepeatMovementsOptions, 'count' | 'moveOption'> = {}
 	) {
 		return this.repeatMovements([Dir.N], { count, moveOption, ...options });
 	}
@@ -831,8 +831,8 @@ export class Cell {
 	 */
 	public east(
 		count: number | ((cell: Cell | undefined, origin: Cell) => boolean) = 1,
-		moveOption: MoveOption = "none",
-		options: Omit<RepeatMovementsOptions, "count" | "moveOption"> = {}
+		moveOption: MoveOption = 'none',
+		options: Omit<RepeatMovementsOptions, 'count' | 'moveOption'> = {}
 	) {
 		return this.repeatMovements([Dir.E], { count, moveOption, ...options });
 	}
@@ -844,8 +844,8 @@ export class Cell {
 	 */
 	public south(
 		count: number | ((cell: Cell | undefined, origin: Cell) => boolean) = 1,
-		moveOption: MoveOption = "none",
-		options: Omit<RepeatMovementsOptions, "count" | "moveOption"> = {}
+		moveOption: MoveOption = 'none',
+		options: Omit<RepeatMovementsOptions, 'count' | 'moveOption'> = {}
 	) {
 		return this.repeatMovements([Dir.S], { count, moveOption, ...options });
 	}
@@ -857,8 +857,8 @@ export class Cell {
 	 */
 	public west(
 		count: number | ((cell: Cell | undefined, origin: Cell) => boolean) = 1,
-		moveOption: MoveOption = "none",
-		options: Omit<RepeatMovementsOptions, "count" | "moveOption"> = {}
+		moveOption: MoveOption = 'none',
+		options: Omit<RepeatMovementsOptions, 'count' | 'moveOption'> = {}
 	) {
 		return this.repeatMovements([Dir.W], { count, moveOption, ...options });
 	}
@@ -869,11 +869,11 @@ export class Cell {
 	 * @param options Options for the movement
 	 */
 	public repeatMovements(movements: [dRow: number, dCol: number][], options: RepeatMovementsOptions = {}) {
-		const { count = 1, moveOption = "none", forceOneMove = true, updateTracking = false, transferData } = options;
+		const { count = 1, moveOption = 'none', forceOneMove = true, updateTracking = false, transferData } = options;
 		let nextPos = [...this.pos] as GridPos;
 		for (
 			let i = 0;
-			typeof count === "number"
+			typeof count === 'number'
 				? i < count
 				: (i === 0 && forceOneMove) || count(this.grid.getCell(nextPos), this);
 			++i
@@ -887,10 +887,10 @@ export class Cell {
 					lastValidCell = landedOn;
 				}
 			}
-			if (moveOption === "wrap") {
+			if (moveOption === 'wrap') {
 				nextPos[0] = util.mod(nextPos[0], this.grid.rowCount);
 				nextPos[1] = util.mod(nextPos[1], this.grid.colCount);
-			} else if (moveOption === "stay") {
+			} else if (moveOption === 'stay') {
 				const prev = [...nextPos];
 				nextPos[0] = util.clamp(nextPos[0], 0, this.grid.rowCount - 1);
 				nextPos[1] = util.clamp(nextPos[1], 0, this.grid.colCount - 1);
@@ -899,7 +899,7 @@ export class Cell {
 					nextPos[1] = lastValidCell.pos[1];
 					break;
 				}
-			} else if (moveOption === "expand") {
+			} else if (moveOption === 'expand') {
 				if (nextPos[0] < 0) {
 					this.grid.editGrid({ top: -nextPos[0] });
 					nextPos[0] = 0;
@@ -916,7 +916,7 @@ export class Cell {
 					this.grid.editGrid({ right: nextPos[1] - this.grid.colCount + 1 });
 					nextPos[1] = this.grid.colCount - 1;
 				}
-			} else if (typeof moveOption === "function") {
+			} else if (typeof moveOption === 'function') {
 				const result = moveOption(this.grid.getCell(nextPos), this);
 				if (result) {
 					nextPos = result;
@@ -1036,32 +1036,32 @@ if (require.main === module) {
 	g.log();
 	let count = 0;
 	for (const cell of g) {
-		if (cell.value === ".") {
+		if (cell.value === '.') {
 			count++;
 		}
 	}
 	console.log(`dot count: ${count} (expect 11)`);
 	const cellsThatHaveTwoDotNeighbors = Array.from(g).filter(
-		c => c.neighbors(true).filter(n => n.value === ".").length === 2
+		c => c.neighbors(true).filter(n => n.value === '.').length === 2
 	).length;
 	console.log(`Num cells w/ 2 neighbors that are dots: ${cellsThatHaveTwoDotNeighbors} (expect 8)`);
 
-	g.editGrid({ top: 2, fillWith: "!" });
+	g.editGrid({ top: 2, fillWith: '!' });
 	g.log();
 
-	g.editGrid({ bottom: 2, fillWith: "!" });
+	g.editGrid({ bottom: 2, fillWith: '!' });
 	g.log();
 
-	g.editGrid({ left: 2, fillWith: "!" });
+	g.editGrid({ left: 2, fillWith: '!' });
 	g.log();
 
-	g.editGrid({ right: 2, fillWith: "!" });
+	g.editGrid({ right: 2, fillWith: '!' });
 	g.log();
 
 	// Copy to new grid with 2 row/column thick border of empty cells.
 	const borderSize = 2;
 	const borderGrid = g.copyGrid({
-		fillNewCellsWith: "#",
+		fillNewCellsWith: '#',
 		destRowCount: g.rowCount + 2 * borderSize,
 		destColCount: g.colCount + 2 * borderSize,
 		destStartRow: borderSize,
@@ -1098,30 +1098,30 @@ if (require.main === module) {
 	rotate3.log(false);
 	const rotate4 = rotate3.rotate(1);
 	rotate4.log(false);
-	const hFlip = rotate4.flip("horizontal");
+	const hFlip = rotate4.flip('horizontal');
 	hFlip.log(false);
-	const vFlip = rotate4.flip("vertical");
+	const vFlip = rotate4.flip('vertical');
 	vFlip.log(false);
-	const bothFlip = rotate4.flip("both");
+	const bothFlip = rotate4.flip('both');
 	bothFlip.log(false);
 
 	function conway(iterations: number = 100, rows: number = 30, cols: number = 50) {
-		const g = new Grid({ rowCount: rows, colCount: cols, fillWith: "." });
+		const g = new Grid({ rowCount: rows, colCount: cols, fillWith: '.' });
 		for (const cell of g) {
 			if (Math.random() < 0.25) {
-				cell.setValue("#");
+				cell.setValue('#');
 			}
 		}
 		g.log();
 		g.simulateCellularAutomata(iterations, cell => {
-			const neighbors = cell.neighbors(true).filter(n => n.value === "#");
-			if (cell.value === "#") {
+			const neighbors = cell.neighbors(true).filter(n => n.value === '#');
+			if (cell.value === '#') {
 				if (neighbors.length < 2 || neighbors.length > 3) {
-					return ".";
+					return '.';
 				}
-			} else if (cell.value === ".") {
+			} else if (cell.value === '.') {
 				if (neighbors.length === 3) {
-					return "#";
+					return '#';
 				}
 			}
 		});
